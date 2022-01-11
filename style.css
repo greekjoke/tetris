@@ -1,0 +1,39 @@
+/* TETRIS styles */
+
+.tetris {
+  background-color: #ffa;
+  box-sizing: border-box;
+  border: 1px solid green;
+}
+.tetris .field {
+  box-sizing: border-box;  
+  border: 1px solid #333;
+  display: flex;
+  flex-wrap: wrap;
+  width: 47vh;
+  height: 94vh;  
+  margin: 5px;
+}
+.tetris .cell {
+  box-sizing: border-box;
+  border: 1px solid #222;
+  border-right: 0;
+  border-bottom: 0;
+  background-color: black;
+  margin: 0;
+  padding: 0;  
+  min-width: 10px;
+  min-height: 10px;
+  flex: auto;
+  flex-basis: 10%;
+}
+.tetris .on {
+  background-color: white;
+  border: 0;
+}
+.tetris .on.c0 { background-color: #cd00cd; }
+.tetris .on.c1 { background-color: #ffff00; }
+.tetris .on.c2 { background-color: #00ff00; }
+.tetris .on.c3 { background-color: #ff0000; }
+.tetris .on.c4 { background-color: #0000ab; }
+.tetris .on.c5 { background-color: #00ffff; }
