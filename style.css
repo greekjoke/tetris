@@ -1,25 +1,60 @@
 /* TETRIS styles */
 
-.tetris {
-  background-color: #ffa;
+.tetris {    
   box-sizing: border-box;
-  border: 1px solid green;
 }
-.tetris .field {
+.tetris > .info {  
+  background-color: #ffa;
   box-sizing: border-box;  
-  border: 1px solid #333;
+  border: 1px solid black;
+  height: 50px;  
+  width: 47vh;
+  height: 94vh;  
+  border-right: 0;  
+  float: left;
+}
+.tetris > .info > div {  
+  margin: 5px;
+}
+.tetris > .info > div > .text { 
+  display: inline-block;
+  width: 50%;
+  color: gray;
+}
+.tetris > .info > .title {  
+  font-size: 2.4em;
+  font-weight: bold;
+  color: #56a;
+  text-align: center;
+}
+.tetris > .info > .figure {  
+  box-sizing: border-box;
+  background-color: gray;  
+  margin: 5px;
+  padding: 20px;
+  text-align: center;  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tetris > .field,
+.tetris > .info .cells
+{
+  box-sizing: border-box;  
+  border: 1px solid black;
   display: flex;
   flex-wrap: wrap;
   width: 47vh;
-  height: 94vh;  
-  margin: 5px;
+  height: 94vh;    
+}
+.tetris > .info .cells {  
+  border: 0;  
+  width: 33%;  
+  height: 10vh;
 }
 .tetris .cell {
-  box-sizing: border-box;
-  border: 1px solid #222;
-  border-right: 0;
-  border-bottom: 0;
-  background-color: black;
+  box-sizing: border-box;  
+  background-color: #333;
   margin: 0;
   padding: 0;  
   min-width: 10px;
@@ -27,13 +62,36 @@
   flex: auto;
   flex-basis: 10%;
 }
+.tetris > .info .cell { 
+  flex-basis: 25%;
+  background-color: transparent;
+} 
 .tetris .on {
   background-color: white;
-  border: 0;
+  border: 4px solid #aaa;
+  border-style: outset;
 }
-.tetris .on.c0 { background-color: #cd00cd; }
-.tetris .on.c1 { background-color: #ffff00; }
-.tetris .on.c2 { background-color: #00ff00; }
-.tetris .on.c3 { background-color: #ff0000; }
-.tetris .on.c4 { background-color: #0000ab; }
-.tetris .on.c5 { background-color: #00ffff; }
+.tetris .on[data-color="0"] { 
+  background-color: #c23fd5; 
+  border-color: #d24fe5; 
+}
+.tetris .on[data-color="1"] { 
+  background-color: #ded53d; 
+  border-color: #eee54d; 
+}
+.tetris .on[data-color="2"] { 
+  background-color: #5fde3d; 
+  border-color: #6fee4d; 
+}
+.tetris .on[data-color="3"] {
+   background-color: #db4242;
+   border-color: #eb5252;
+}
+.tetris .on[data-color="4"] { 
+  background-color: #5862e6; 
+  border-color: #6872f6; 
+}
+.tetris .on[data-color="5"] { 
+  background-color: #2ddbe1; 
+  border-color: #3debf1; 
+}
