@@ -396,7 +396,7 @@ function Tetris(params) {
 
   function moveDown(state, draw = true) {
     const y = state.posY + 1
-    var fig = figureToView(state.figure, state.posX, y, state.rotate)
+    var fig = figureToView(state.figure, state.posX, y, state.rotate)    
     if (testBounds(state, fig)) {
       state.posY = y
       if (draw) render(state)
@@ -405,6 +405,7 @@ function Tetris(params) {
       figureToStatic(state, fig)
       if (draw) render(state)
       state.figure = null // need new figure                
+
       const removedRows = checkForCollapse(state)
       if (removedRows > 0) {
 
