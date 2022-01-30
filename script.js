@@ -136,32 +136,6 @@ function Tetris(params) {
     fig.bounds.max = Math.max(fig.bounds.x, fig.bounds.y)
   }
 
-  function newGame() {
-    const state = {
-      run: false,        
-      startLevel: 5,
-      figure: null,
-      dots: [],
-      nextColor: 0,      
-      stat: {
-        timeStart: null,
-        timeLast: null,
-        score: -1,
-        level: -1,
-        rows: -1,
-        figures: -1,
-        tetris: -1,
-      }
-    }
-
-    var i = field.width * field.height
-    while(i--) {
-      state.dots.push(emptyColor) // empty
-    }
-
-    return state
-  } 
-
   function pad(num, size) {
     num = num.toString();
     while (num.length < size) num = "0" + num;
@@ -281,273 +255,305 @@ function Tetris(params) {
     }
   }
 
-  function figureToStatic(state, fig) {
-    const maxVerts = fig.x.length
-    for(var i=0; i < maxVerts; i++) {      
-      var idx = getCellIndex(fig.x[i], fig.y[i])
-      if (idx >= 0 && idx < cellsList.length) {
-        state.dots[idx] = state.color
-      }
-    }
-  }
-
-  function genNewColor(state) {
-    /*const c = getRandValue(0, maxColors - 1)*/
-    const c = state.nextColor
-    state.nextColor = (c + 1)  % maxColors
-    return c
-  }
-
-  function newFigure(state) {    
-    const newColor = genNewColor(state)
-    const newIndex = getRandValue(0, figuresList.length - 1)
-    const src = figuresList[newIndex]
-
-    if (!state.figureNext) {      
-      const newIndex2 = getRandValue(0, figuresList.length - 1)
-      state.figureNext = figuresList[newIndex2]
-      state.colorNext = genNewColor(state)
-    }
-
-    state.figure = state.figureNext
-    state.figureNext = src    
-    state.color = state.colorNext
-    state.colorNext = newColor
-    state.rotate = 0
-    state.posX = field.width / 2 - src.bounds.max / 2 - 1
-    state.posY = 0
-
-    if (!testBounds(state)) {      
-      stop(state)
-    } else {
-      state.stat.figures++
-      render(state);
-    }
-  }
-
-  function testBounds(state, fig) {
-    fig = fig || figureToView(state.figure, state.posX, state.posY, state.rotate)
-    if (!fig) return
-    const maxVerts = fig.x.length
-    var x, y, idx
-    for(var i=0; i < maxVerts; i++) {  
-      x = fig.x[i]
-      y = fig.y[i]    
-      if (x < 0 || x >= field.width) return false
-      if (/*y < 0 || */y >= field.height) return false      
-      idx = getCellIndex(x, y)
-      if (state.dots[idx] >= 0) return false
-    }
-    return true
-  }
-
-  function replaceRow(state, row) {
-    var i, j
-    for(var x=0; x < field.width; x++) {
-      i = getCellIndex(x, row)
-      if (row > 0) {
-        j = getCellIndex(x, row - 1)
-        state.dots[i] = state.dots[j]
-      } else {
-        state.dots[i] = emptyColor // clear
-      }
-    }
-  }
-
-  function removeRow(state, row) {    
-    for(var y=row; y >= 0; y--) {
-      replaceRow(state, y)
-    }      
-  }
-
-  function checkForCollapse(state, removeFilledRow = true) {
-    var idx, filledDots, filledRows = 0
-    
-    for(var y=field.height-1; y >= 0; y--) 
-    {
-      filledDots = 0
-    
-      for(var x=0; x < field.width; x++) {
-        idx = getCellIndex(x, y)
-        if (state.dots[idx] >= 0) {
-          filledDots++
-        }
-      }
-    
-      if (filledDots == field.width) {
-        filledRows++
-        if (removeFilledRow) {
-          removeRow(state, y)
-          y++
-        }
-      }
-    }
-
-    return filledRows
-  }
-
-  function render(state) {    
-    drawStatic(state.dots)
-    if (state.figure) {      
-      var fig = figureToView(state.figure, state.posX, state.posY, state.rotate)    
-      drawFigure(fig, state.color)    
-    }
-  }
-
-  function moveDown(state, draw = true) {
-    const y = state.posY + 1
-    var fig = figureToView(state.figure, state.posX, y, state.rotate)    
-    if (testBounds(state, fig)) {
-      state.posY = y
-      if (draw) render(state)
-    } else {
-      fig = figureToView(state.figure, state.posX, state.posY, state.rotate)
-      figureToStatic(state, fig)
-      if (draw) render(state)
-      state.figure = null // need new figure                
-
-      const removedRows = checkForCollapse(state)
-      if (removedRows > 0) {
-
-        // считаем очки
-        const idx = Math.min(removedRows, 4) - 1        
-        state.stat.score += scorePrice[idx]
-        state.stat.rows += removedRows
-
-        // это формация тетрис!
-        if (removedRows >= 4) {
-          state.stat.tetris += removedRows
-        }        
-
-        // осталось убрать строк до следующего уровня
-        state.leftRowsToLevel -= removedRows
-        if (state.leftRowsToLevel < 1) {
-          state.leftRowsToLevel = rowsPerLevel
-          state.stat.level++
-        }
-      }
-    }
-  }
-
-  function moveLeft(state) {
-    const x = state.posX - 1
-    const fig = figureToView(state.figure, x, state.posY, state.rotate)    
-    if (testBounds(state, fig)) {
-      state.posX = x
-      render(state)
-    } else {
-      //console.warn("test failed")
-    }
-  }
-
-  function moveRight(state) {
-    const x = state.posX + 1
-    const fig = figureToView(state.figure, x, state.posY, state.rotate)    
-    if (testBounds(state, fig)) {
-      state.posX = x
-      render(state)
-    } else {
-      //console.warn("test failed")
-    }
-  }
-
-  function nextRotation(state) {
-    const r = (state.rotate + 1) % maxRotations
-    const fig = figureToView(state.figure, state.posX, state.posY, r)
-    if (testBounds(state, fig)) {
-      state.rotate = r
-      render(state)
-    } else {
-      //console.warn("test failed")
-    }
-  }
-
-  function drop(state) {
-    var i = 0
-    while (state.figure) {
-      moveDown(state, false)
-      i++
-    }
-    if (i > 0) render(state)
-  }
-
-  function start(state) {
-    console.log('START')    
-    
-    state.run = true  
-    state.leftRowsToLevel = rowsPerLevel
-    state.stat.timeStart = new Date()
-    state.stat.timeLast = state.stat.timeStart
-    state.stat.level = state.startLevel
-    state.stat.score = 0
-    state.stat.rows = 0
-    state.stat.figures = 0
-    state.stat.tetris = 0
-
-    clearField()
-    nextLoop(state)    
-  }
-
-  function stop(state) {
-    state.run = false
-    clearTimeout(loopTimer)        
-    console.log('STOP')
-  }
-
-  function getTimerDelay(state) {    
+  function getTimerDelay(level) {    
     const maxLevels = levelToSpeed.length    
-    const i = Math.min(maxLevels-1, state.stat.level)        
+    const i = Math.min(maxLevels-1, level)
     const speed = levelToSpeed[i] 
     const w = 1.0 / speed
     return w * 1000
   }
 
-  function nextLoop(state) {
-    if (!state.run) return  
+  function newGame() {
+    const state = {
+      run: false,        
+      startLevel: 5,
+      figure: null,
+      dots: [],
+      nextColor: 0,      
+      stat: {
+        timeStart: null,
+        timeLast: null,
+        score: -1,
+        level: -1,
+        rows: -1,
+        figures: -1,
+        tetris: -1,
+      },
 
-    state.stat.timeLast = new Date()
+      initState: function() {
+        var i = field.width * field.height
+        while(i--) {
+          this.dots.push(emptyColor) // empty
+        }
+      },
 
-    if (!state.figure) {
-      newFigure(state)
-    } else {    
-      moveDown(state)
-    }
-    updateInfo(state)
+      figureToStatic: function(fig) {        
+        const maxVerts = fig.x.length
+        for(var i=0; i < maxVerts; i++) {      
+          var idx = getCellIndex(fig.x[i], fig.y[i])
+          if (idx >= 0 && idx < cellsList.length) {
+            this.dots[idx] = this.color
+          }
+        }
+      },
 
-    if (!state.run) return  
+      genNewColor: function() {
+        /*const c = getRandValue(0, maxColors - 1)*/
+        const c = this.nextColor
+        this.nextColor = (c + 1)  % maxColors
+        return c
+      },
 
-    const delay = getTimerDelay(state)
-    loopTimer = setTimeout(function() {
-      nextLoop(state)
-    }, delay);
-  }
-
-  function updateInfo(state) {
-    const s = state.stat
+      newFigure: function() {    
+        const newColor = this.genNewColor()
+        const newIndex = getRandValue(0, figuresList.length - 1)
+        const src = figuresList[newIndex]
     
-    if (s.timeLast != null) {
-      var diff = s.timeLast.getTime() - s.timeStart.getTime();
-      s.duration = diff * 1000 // сохраним время в секундах
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      diff -= hours * (1000 * 60 * 60);
-      const mins = Math.floor(diff / (1000 * 60));
-      diff -= mins * (1000 * 60);
-      const seconds = Math.floor(diff / (1000));
-      infoValues['time'].html(pad(hours, 2)+':'+pad(mins, 2)+':'+pad(seconds, 2))
-    } else {
-      infoValues['time'].html('--:--:--')
-    }
+        if (!this.figureNext) {      
+          const newIndex2 = getRandValue(0, figuresList.length - 1)
+          this.figureNext = figuresList[newIndex2]
+          this.colorNext = this.genNewColor()
+        }
+    
+        this.figure = this.figureNext
+        this.figureNext = src    
+        this.color = this.colorNext
+        this.colorNext = newColor
+        this.rotate = 0
+        this.posX = field.width / 2 - src.bounds.max / 2 - 1
+        this.posY = 0
+    
+        if (!this.testBounds()) {      
+          this.stop()
+        } else {
+          this.stat.figures++
+          this.render();
+        }
+      },
 
-    infoValues['level'].html(s.level < 0 ? '--' : s.level)
-    infoValues['score'].html(s.score < 0 ? '--' : s.score)
-    infoValues['rows'].html(s.rows < 0 ? '--' : s.rows)
-    infoValues['figures'].html(s.figures < 0 ? '--' : s.figures)
-    infoValues['tetris'].html(s.tetris < 0 ? '--' : s.tetris)
+      testBounds: function(fig) {
+        fig = fig || figureToView(this.figure, this.posX, this.posY, this.rotate)
+        if (!fig) return
+        const maxVerts = fig.x.length
+        var x, y, idx
+        for(var i=0; i < maxVerts; i++) {  
+          x = fig.x[i]
+          y = fig.y[i]    
+          if (x < 0 || x >= field.width) return false
+          if (/*y < 0 || */y >= field.height) return false      
+          idx = getCellIndex(x, y)
+          if (this.dots[idx] >= 0) return false
+        }
+        return true
+      }, 
 
-    clearPreviewField()
-    drawPreviewFigure(state.figureNext, state.colorNext)
-  }
+      replaceRow: function(row) {
+        var i, j
+        for(var x=0; x < field.width; x++) {
+          i = getCellIndex(x, row)
+          if (row > 0) {
+            j = getCellIndex(x, row - 1)
+            this.dots[i] = this.dots[j]
+          } else {
+            this.dots[i] = emptyColor // clear
+          }
+        }
+      },
 
+      removeRow: function(row) {    
+        for(var y=row; y >= 0; y--) {
+          this.replaceRow(y)
+        }      
+      },
+
+      checkForCollapse: function(removeFilledRow = true) {
+        var idx, filledDots, filledRows = 0
+        
+        for(var y=field.height-1; y >= 0; y--) 
+        {
+          filledDots = 0
+        
+          for(var x=0; x < field.width; x++) {
+            idx = getCellIndex(x, y)
+            if (this.dots[idx] >= 0) {
+              filledDots++
+            }
+          }
+        
+          if (filledDots == field.width) {
+            filledRows++
+            if (removeFilledRow) {
+              this.removeRow(y)
+              y++
+            }
+          }
+        }
+    
+        return filledRows
+      }, 
+
+      render: function() {    
+        drawStatic(this.dots)
+        if (this.figure) {      
+          var fig = figureToView(this.figure, this.posX, this.posY, this.rotate)    
+          drawFigure(fig, this.color)    
+        }
+      },
+
+      moveDown: function(draw = true) {
+        const y = this.posY + 1
+        var fig = figureToView(this.figure, this.posX, y, this.rotate)    
+        if (this.testBounds(fig)) {
+          this.posY = y
+          if (draw) this.render()
+        } else {
+          fig = figureToView(this.figure, this.posX, this.posY, this.rotate)
+          this.figureToStatic(fig)
+          if (draw) this.render()
+          this.figure = null // need new figure                
+    
+          const removedRows = this.checkForCollapse(this)
+          if (removedRows > 0) {
+    
+            // считаем очки
+            const idx = Math.min(removedRows, 4) - 1        
+            this.stat.score += scorePrice[idx]
+            this.stat.rows += removedRows
+    
+            // это формация тетрис!
+            if (removedRows >= 4) {
+              this.stat.tetris += removedRows
+            }        
+    
+            // осталось убрать строк до следующего уровня
+            this.leftRowsToLevel -= removedRows
+            if (this.leftRowsToLevel < 1) {
+              this.leftRowsToLevel = rowsPerLevel
+              this.stat.level++
+            }
+          }
+        }
+      },
+
+      moveLeft: function() {
+        const x = this.posX - 1
+        const fig = figureToView(this.figure, x, this.posY, this.rotate)    
+        if (this.testBounds(fig)) {
+          this.posX = x
+          this.render()
+        } else {
+          //console.warn("test failed")
+        }
+      },
+
+      moveRight: function() {
+        const x = this.posX + 1
+        const fig = figureToView(this.figure, x, this.posY, this.rotate)    
+        if (this.testBounds(fig)) {
+          this.posX = x
+          this.render()
+        } else {
+          //console.warn("test failed")
+        }
+      },
+
+      nextRotation: function() {
+        const r = (this.rotate + 1) % maxRotations
+        const fig = figureToView(this.figure, this.posX, this.posY, r)
+        if (this.testBounds(fig)) {
+          this.rotate = r
+          this.render()
+        } else {
+          //console.warn("test failed")
+        }
+      },
+
+      drop: function() {
+        var i = 0
+        while (this.figure) {
+          this.moveDown(false)
+          i++
+        }
+        if (i > 0) this.render()
+      },
+
+      start: function() {
+        console.log('START')    
+        
+        this.run = true  
+        this.leftRowsToLevel = rowsPerLevel
+        this.stat.timeStart = new Date()
+        this.stat.timeLast = this.stat.timeStart
+        this.stat.level = this.startLevel
+        this.stat.score = 0
+        this.stat.rows = 0
+        this.stat.figures = 0
+        this.stat.tetris = 0
+    
+        clearField()
+        this.nextLoop()    
+      },
+
+      stop: function() {
+        this.run = false
+        clearTimeout(loopTimer)        
+        console.log('STOP')
+      },
+
+      nextLoop: function() {
+        if (!this.run) return  
+    
+        this.stat.timeLast = new Date()
+    
+        if (!this.figure) {
+          this.newFigure()
+        } else {    
+          this.moveDown()
+        }
+        this.updateInfo()
+    
+        if (!this.run) return  
+    
+        var that = this
+        const delay = getTimerDelay(this.stat.level)
+        loopTimer = setTimeout(function() {
+          that.nextLoop()
+        }, delay);
+      },
+
+      updateInfo: function() {
+        const s = this.stat
+        
+        if (s.timeLast != null) {
+          var diff = s.timeLast.getTime() - s.timeStart.getTime();
+          s.duration = diff * 1000 // сохраним время в секундах
+          const hours = Math.floor(diff / (1000 * 60 * 60));
+          diff -= hours * (1000 * 60 * 60);
+          const mins = Math.floor(diff / (1000 * 60));
+          diff -= mins * (1000 * 60);
+          const seconds = Math.floor(diff / (1000));
+          infoValues['time'].html(pad(hours, 2)+':'+pad(mins, 2)+':'+pad(seconds, 2))
+        } else {
+          infoValues['time'].html('--:--:--')
+        }
+    
+        infoValues['level'].html(s.level < 0 ? '--' : s.level)
+        infoValues['score'].html(s.score < 0 ? '--' : s.score)
+        infoValues['rows'].html((s.rows < 0 ? '--' : s.rows) + ' / ' + (this.leftRowsToLevel || '--'))
+        infoValues['figures'].html(s.figures < 0 ? '--' : s.figures)
+        infoValues['tetris'].html(s.tetris < 0 ? '--' : s.tetris)
+    
+        clearPreviewField()
+        drawPreviewFigure(this.figureNext, this.colorNext)
+      },
+
+    } // const state
+
+    state.initState()
+
+    return state
+  } 
+  
   function buildCellsArray(container, width, height) {
     for(var row=0; row < height; row++)
       {
@@ -606,11 +612,11 @@ function Tetris(params) {
         switch(e.which) 
         {
           case KEY_ARROW_LEFT:            
-            moveLeft(gameState);
+          gameState.moveLeft();
             break;
   
           case KEY_ARROW_RIGHT:
-            moveRight(gameState);
+            gameState.moveRight();
             break;
     
           default: 
@@ -626,11 +632,11 @@ function Tetris(params) {
         switch(e.which) 
         {
           case KEY_ARROW_UP:
-            nextRotation(gameState);
+            gameState.nextRotation();
             break;
             
           case KEY_ARROW_DOWN:
-            drop(gameState)
+            gameState.drop()
             break;
 
           case KEY_SPACEBAR:   
@@ -649,10 +655,10 @@ function Tetris(params) {
 
       f.click(function() {
         if (gameState) {
-          stop(gameState)
+          gameState.stop()
         }
         gameState = newGame()    
-        start(gameState)
+        gameState.start()
       })
      
       return
