@@ -137,9 +137,9 @@ function Tetris(params) {
   }
 
   function pad(num, size) {
-    num = num.toString();
-    while (num.length < size) num = "0" + num;
-    return num;
+    num = num.toString()
+    while (num.length < size) num = "0" + num
+    return num
   }
 
   function getRandValue(minValue, maxValue) {
@@ -150,13 +150,13 @@ function Tetris(params) {
 
   function getCellIndex(x, y) {
     if (x < 0 || y < 0 || x >= field.width || y >= field.height)
-      return -1;
+      return -1
     return y * field.width + x
   }
 
   function getPreviewCellIndex(x, y) {
     if (x < 0 || y < 0 || x >= fieldPreview.width || y >= fieldPreview.height)
-      return -1;
+      return -1
     return y * fieldPreview.width + x
   }
 
@@ -212,7 +212,7 @@ function Tetris(params) {
       e.addClass('on')
       //clr = (clr + 1) % maxColors
       clr = getRandValue(0, maxColors - 1)
-    });
+    })
   }
 
   function drawFigure(fig, clr) {    
@@ -265,7 +265,8 @@ function Tetris(params) {
 
   function newGame() {
     const state = {
-      run: false,        
+      run: false,     
+      pause: false,   
       startLevel: 5,
       figure: null,
       dots: [],
@@ -327,7 +328,7 @@ function Tetris(params) {
           this.stop()
         } else {
           this.stat.figures++
-          this.render();
+          this.render()
         }
       },
 
@@ -481,6 +482,9 @@ function Tetris(params) {
         console.log('START')    
         
         this.run = true  
+        this.pause = false
+        this.pauseStart = null
+        this.pauseDuration = 0
         this.leftRowsToLevel = rowsPerLevel
         this.stat.timeStart = new Date()
         this.stat.timeLast = this.stat.timeStart
@@ -494,23 +498,38 @@ function Tetris(params) {
         this.nextLoop()    
       },
 
-      stop: function() {
+      stop: function(silent = false) {
         this.run = false
         clearTimeout(loopTimer)        
         console.log('STOP')
+        if (!silent)
+          alert('Игра звершена')
+      },
+
+      togglePause: function() {
+        this.pause = !this.pause        
+        console.log('PAUSE', this.pause)
+        if (this.pause) {
+          this.pauseStart = new Date()
+        } else {
+          const t = new Date()          
+          this.pauseDuration += t.getTime() - this.pauseStart.getTime()
+        }
       },
 
       nextLoop: function() {
-        if (!this.run) return  
+        if (!this.run) return
     
         this.stat.timeLast = new Date()
     
-        if (!this.figure) {
-          this.newFigure()
-        } else {    
-          this.moveDown()
+        if (!this.pause) {
+          if (!this.figure) {
+            this.newFigure()
+          } else {    
+            this.moveDown()
+          }          
+          this.updateInfo()
         }
-        this.updateInfo()
     
         if (!this.run) return  
     
@@ -518,20 +537,21 @@ function Tetris(params) {
         const delay = getTimerDelay(this.stat.level)
         loopTimer = setTimeout(function() {
           that.nextLoop()
-        }, delay);
+        }, delay)
       },
 
       updateInfo: function() {
         const s = this.stat
         
         if (s.timeLast != null) {
-          var diff = s.timeLast.getTime() - s.timeStart.getTime();
-          s.duration = diff * 1000 // сохраним время в секундах
-          const hours = Math.floor(diff / (1000 * 60 * 60));
-          diff -= hours * (1000 * 60 * 60);
-          const mins = Math.floor(diff / (1000 * 60));
-          diff -= mins * (1000 * 60);
-          const seconds = Math.floor(diff / (1000));
+          var diff = s.timeLast.getTime() - s.timeStart.getTime()
+          diff -= this.pauseDuration // учтём время проведённое в паузе
+          s.duration = diff / 1000 // сохраним время в секундах
+          const hours = Math.floor(diff / (1000 * 60 * 60))
+          diff -= hours * (1000 * 60 * 60)
+          const mins = Math.floor(diff / (1000 * 60))
+          diff -= mins * (1000 * 60)
+          const seconds = Math.floor(diff / (1000))
           infoValues['time'].html(pad(hours, 2)+':'+pad(mins, 2)+':'+pad(seconds, 2))
         } else {
           infoValues['time'].html('--:--:--')
@@ -580,7 +600,7 @@ function Tetris(params) {
       
       const preview = $('<div class="figure"><div class="cells"></div></div>')      
       buildCellsArray(preview.find('.cells'), fieldPreview.width, fieldPreview.height)
-      cellsPreviewList = preview.find('.cell');
+      cellsPreviewList = preview.find('.cell')
       infoPanel.append(preview)
 
       infoPanel.append('<div class="time"><span class="text">Время</span><span class="value">00:00:00</span></div>')
@@ -590,14 +610,21 @@ function Tetris(params) {
       infoPanel.append('<div class="sum-rows"><span class="text">Ряды</span><span class="value">--</span></div>')      
       infoPanel.append('<div class="sum-figures"><span class="text">Фигуры</span><span class="value">--</span></div>')
       infoPanel.append('<div class="other"></div>')
+      infoPanel.append('<div class="help"><h4>управление</h4>'+        
+        '<div class="item"><span class="key">&uarr;</span>поворот</div>'+
+        '<div class="item"><span class="key">&larr;</span>влево</div>'+
+        '<div class="item"><span class="key">&rarr;</span>вправо</div>'+
+        '<div class="item"><span class="key">&darr;</span>сброс</div>'+
+        '<div class="item"><span class="key">space</span>пауза</div>'+
+        '</div>')
       con.append(infoPanel)
 
-      infoValues['time'] = infoPanel.find('.time > .value');
-      infoValues['level'] = infoPanel.find('.level > .value');
-      infoValues['score'] = infoPanel.find('.sum-score > .value');
-      infoValues['tetris'] = infoPanel.find('.sum-tetris > .value');
-      infoValues['rows'] = infoPanel.find('.sum-rows > .value');
-      infoValues['figures'] = infoPanel.find('.sum-figures > .value');
+      infoValues['time'] = infoPanel.find('.time > .value')
+      infoValues['level'] = infoPanel.find('.level > .value')
+      infoValues['score'] = infoPanel.find('.sum-score > .value')
+      infoValues['tetris'] = infoPanel.find('.sum-tetris > .value')
+      infoValues['rows'] = infoPanel.find('.sum-rows > .value')
+      infoValues['figures'] = infoPanel.find('.sum-figures > .value')
       
       const f = $('<div class="field"></div>')      
       buildCellsArray(f, field.width, field.height)
@@ -607,58 +634,78 @@ function Tetris(params) {
       var gameState = null
 
       $(document).keydown(function(e) {
-        if (!gameState || !gameState.run) return;
+        if (!gameState || !gameState.run) return
 
         switch(e.which) 
         {
           case KEY_ARROW_LEFT:            
-          gameState.moveLeft();
-            break;
+            if (gameState.pause) return
+            gameState.moveLeft()
+            break
   
           case KEY_ARROW_RIGHT:
-            gameState.moveRight();
-            break;
+            if (gameState.pause) return
+            gameState.moveRight()
+            break
     
           default: 
-            return;
+            return
         }
 
-        e.preventDefault();
-      });
+        e.preventDefault()
+      })
 
       $(document).keyup(function(e) {
-        if (!gameState || !gameState.run) return;
+        if (!gameState || !gameState.run) return
 
         switch(e.which) 
         {
           case KEY_ARROW_UP:
-            gameState.nextRotation();
-            break;
+            if (gameState.pause) return
+            gameState.nextRotation()
+            break
             
           case KEY_ARROW_DOWN:
+            if (gameState.pause) return
             gameState.drop()
-            break;
+            break
 
           case KEY_SPACEBAR:   
-            // TODO: toggle pause
-            break;
+            gameState.togglePause()
+            break
 
           default: 
-            return;
+            return
         }
 
-        e.preventDefault();
-      });
+        e.preventDefault()
+      })
+
+      function updateContainerSize() {
+        const h = con.height()
+        //const w = Math.floor(h / 2)
+        const w = Math.floor(h / 1) // include information panel
+        con.css('width', w+'px')
+      }
+      $(window).resize(function() {
+        updateContainerSize()
+      })
+      updateContainerSize()
 
       drawRandom()
       drawRandom(cellsPreviewList)
 
-      f.click(function() {
-        if (gameState) {
-          gameState.stop()
+      con.click(function() {
+        if (gameState && gameState.run) {
+          if (!confirm('Завершить игру?')) return
+          gameState.stop(true)
+          gameState = null
+          drawRandom()
+          return
+        } else if (confirm('Начать игру?')) {
+          gameState = newGame()    
+          gameState.start()
         }
-        gameState = newGame()    
-        gameState.start()
       })
      
       return

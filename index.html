@@ -9,10 +9,22 @@
   <script src="script.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
+<style>
+  .viewport {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    border: 2px solid blue; 
+    padding: 20px;
+    display: flex;
+  }
+</style>
 <body>  
-  <div id="container">
-    Loading...
-  </div>  
+  <div class="viewport">
+    <div id="container">Loading...</div>  
+  </div>
   <script>    
     $(document).ready(function() {
       var t = Tetris({

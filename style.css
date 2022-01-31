@@ -2,16 +2,15 @@
 
 .tetris {    
   box-sizing: border-box;
+  display: flex;
 }
-.tetris > .info {  
+.tetris > .info {
   background-color: #ffa;
   box-sizing: border-box;  
-  border: 1px solid black;
-  height: 50px;  
-  width: 47vh;
-  height: 94vh;  
+  border: 1px solid black;  
   border-right: 0;  
   float: left;
+  width: 50%;
 }
 .tetris > .info > div {  
   margin: 5px;
@@ -28,14 +27,15 @@
   text-align: center;
 }
 .tetris > .info > .figure {  
-  box-sizing: border-box;
-  background-color: gray;  
+  box-sizing: border-box;  
   margin: 5px;
-  padding: 20px;
+  padding: 10px;
   text-align: center;  
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid #333;
+  background: linear-gradient(to top, #752, 50%, #a95);
 }
 .tetris > .field,
 .tetris > .info .cells
@@ -43,14 +43,13 @@
   box-sizing: border-box;  
   border: 1px solid black;
   display: flex;
-  flex-wrap: wrap;
-  width: 47vh;
-  height: 94vh;    
+  flex-wrap: wrap;  
+  width: 50%;    
 }
 .tetris > .info .cells {  
   border: 0;  
-  width: 33%;  
-  height: 10vh;
+  width: 80px;    
+  height: 60px;
 }
 .tetris .cell {
   box-sizing: border-box;  
@@ -94,4 +93,31 @@
 .tetris .on[data-color="5"] { 
   background-color: #2ddbe1; 
   border-color: #3debf1; 
+}
+.tetris .help {
+  border-top: 1px solid black;
+  margin-top: 5px;  
+  padding: 0;
+}
+.tetris h4 {
+  margin: 5px 0;
+  text-transform: capitalize;
+  text-align: center;
+  color: gray;
+}
+.tetris .help .item {
+  display: inline-block;
+  margin: 5px;
+}
+.tetris .help .key {
+  display: inline-block;
+  border: 1px solid black;
+  border-radius: 2px;
+  background: white;
+  padding: 2px 7px;
+  vertical-align: top;
+  margin-right: 10px;
+  box-shadow: 2px 2px 2px rgba(0, 0, 0, .4);
+  min-width: 16px;
+  text-align: center;
 }
