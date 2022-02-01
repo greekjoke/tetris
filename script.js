@@ -45,6 +45,30 @@ function Tetris(params) {
   if (con.length < 1)
     return false
 
+  params['startLevel'] = params['startLevel'] === undefined ? 5 : params['startLevel']
+
+  params['onPrepare'] = params['onPrepare'] || function(cbStart) {
+    if (confirm('Начать игру?')) {
+      cbStart()
+    }
+  }
+
+  params['onStart'] = params['onStart'] || function() { 
+    console.log('START')
+  }
+
+  params['onStop'] = params['onStop'] || function(byUser, stat) { 
+    console.log('STOP', byUser)
+    if (!byUser)
+      alert('Игра звершена')       
+  }
+
+  params['onPause'] = params['onPause'] || function(on) {
+    console.log('PASUE', on)
+  }
+
+  params['onStat'] = params['onStat'] || function(stat) {}
+
   const KEY_SPACEBAR = 32
   const KEY_ARROW_LEFT = 37
   const KEY_ARROW_UP = 38
@@ -267,7 +291,7 @@ function Tetris(params) {
     const state = {
       run: false,     
       pause: false,   
-      startLevel: 5,
+      startLevel: params['startLevel'],
       figure: null,
       dots: [],
       nextColor: 0,      
@@ -423,7 +447,7 @@ function Tetris(params) {
     
             // это формация тетрис!
             if (removedRows >= 4) {
-              this.stat.tetris += removedRows
+              this.stat.tetris++
             }        
     
             // осталось убрать строк до следующего уровня
@@ -479,8 +503,6 @@ function Tetris(params) {
       },
 
       start: function() {
-        console.log('START')    
-        
         this.run = true  
         this.pause = false
         this.pauseStart = null
@@ -493,28 +515,39 @@ function Tetris(params) {
         this.stat.rows = 0
         this.stat.figures = 0
         this.stat.tetris = 0
+
+        params['onStart'].call(this)
     
         clearField()
+        this.showPause(false)
         this.nextLoop()    
       },
 
-      stop: function(silent = false) {
+      stop: function(byUser = false) {
         this.run = false
-        clearTimeout(loopTimer)        
-        console.log('STOP')
-        if (!silent)
-          alert('Игра звершена')
+        clearTimeout(loopTimer)
+        this.showPause(false)
+        params['onStop'].call(this, byUser, this.stat) 
       },
 
       togglePause: function() {
-        this.pause = !this.pause        
-        console.log('PAUSE', this.pause)
+        this.pause = !this.pause                
         if (this.pause) {
           this.pauseStart = new Date()
         } else {
           const t = new Date()          
           this.pauseDuration += t.getTime() - this.pauseStart.getTime()
         }
+        params['onPause'].call(this, this.pause)
+        this.showPause(this.pause)
+      },
+
+      showPause: function(on) {
+        if (on) {
+          con.addClass('paused')
+        } else {
+          con.removeClass('paused')
+        }        
       },
 
       nextLoop: function() {
@@ -562,6 +595,8 @@ function Tetris(params) {
         infoValues['rows'].html((s.rows < 0 ? '--' : s.rows) + ' / ' + (this.leftRowsToLevel || '--'))
         infoValues['figures'].html(s.figures < 0 ? '--' : s.figures)
         infoValues['tetris'].html(s.tetris < 0 ? '--' : s.tetris)
+
+        params['onStat'].call(this, this.stat)
     
         clearPreviewField()
         drawPreviewFigure(this.figureNext, this.colorNext)
@@ -616,6 +651,7 @@ function Tetris(params) {
         '<div class="item"><span class="key">&rarr;</span>вправо</div>'+
         '<div class="item"><span class="key">&darr;</span>сброс</div>'+
         '<div class="item"><span class="key">space</span>пауза</div>'+
+        '<div class="item text">для начала или завершения игры <u>кликните</u></div>'+
         '</div>')
       con.append(infoPanel)
 
@@ -630,6 +666,8 @@ function Tetris(params) {
       buildCellsArray(f, field.width, field.height)
       cellsList = f.find('.cell')
       con.append(f)
+
+      con.append('<div class="pauseModal"><div class="pauseCon">Пауза</div></div>')
 
       var gameState = null
 
@@ -682,15 +720,18 @@ function Tetris(params) {
       })
 
       function updateContainerSize() {
-        const h = con.height()
+        const h = con.height() // TODO: первый раз почему неверное значение?
         //const w = Math.floor(h / 2)
         const w = Math.floor(h / 1) // include information panel
         con.css('width', w+'px')
+        //console.log('set width to', w, h)
       }
       $(window).resize(function() {
         updateContainerSize()
       })
-      updateContainerSize()
+      setTimeout(function() {
+        updateContainerSize()
+      },50)
 
       drawRandom()
       drawRandom(cellsPreviewList)
@@ -702,9 +743,11 @@ function Tetris(params) {
           gameState = null
           drawRandom()
           return
-        } else if (confirm('Начать игру?')) {
-          gameState = newGame()    
-          gameState.start()
+        } else {
+          params['onPrepare'](function() {
+            gameState = newGame()    
+            gameState.start()
+          })          
         }
       })
      

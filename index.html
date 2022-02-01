@@ -10,27 +10,48 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <style>
-  .viewport {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    border: 2px solid blue; 
-    padding: 20px;
-    display: flex;
+  #container {    
+    height: 94vh;
+  }
+  .tetris .info .other {
+    border-top: 1px solid black;
+    padding-top: 5px;
+    color: green;
   }
 </style>
-<body>  
-  <div class="viewport">
-    <div id="container">Loading...</div>  
-  </div>
+<body>    
+  <div id="container">Loading...</div>    
   <script>    
     $(document).ready(function() {
+
+      // возвращает куки с указанным name, или undefined, если ничего не найдено
+      function getCookie(name) {
+        let matches = document.cookie.match(new RegExp(
+          "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+        ));
+        return matches ? decodeURIComponent(matches[1]) : undefined;
+      }
+
+      // последний рекорд
+      var topScore = getCookie('score') || 0
+
+      // создаём игру
       var t = Tetris({
-        con:'#container'
-      });
+        con:'#container',
+        startLevel: 5,
+        onStop: function(byUser, stat) {          
+          console.log('STOP', byUser)
+          if (byUser) return                    
+          if (stat.score > topScore) {
+            topScore = stat.score
+            console.log('new record', topScore)
+            document.cookie = "score="+topScore // обновим рекорд
+          }
+          alert('Игра звершена')
+        }
+      });      
       t.init();
+      $('#container .other').html('<div>Рекорд: '+topScore+'</div>')
     })
   </script>
 </body>
