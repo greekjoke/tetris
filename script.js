@@ -53,6 +53,12 @@ function Tetris(params) {
     }
   }
 
+  params['onStopQuestion'] = params['onStopQuestion'] || function(cbStop) {
+    if (confirm('Завершить игру?')) {
+      cbStop()
+    }
+  }
+
   params['onStart'] = params['onStart'] || function() { 
     console.log('START')
   }
@@ -525,8 +531,9 @@ function Tetris(params) {
 
       stop: function(byUser = false) {
         this.run = false
-        clearTimeout(loopTimer)
         this.showPause(false)
+        clearTimeout(loopTimer)
+        //drawRandom()
         params['onStop'].call(this, byUser, this.stat) 
       },
 
@@ -738,11 +745,10 @@ function Tetris(params) {
 
       con.click(function() {
         if (gameState && gameState.run) {
-          if (!confirm('Завершить игру?')) return
-          gameState.stop(true)
-          gameState = null
-          drawRandom()
-          return
+          params['onStopQuestion'](function() {
+            gameState.stop(true)
+            gameState = null            
+          })                    
         } else {
           params['onPrepare'](function() {
             gameState = newGame()    

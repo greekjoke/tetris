@@ -35,6 +35,10 @@
       // последний рекорд
       var topScore = getCookie('score') || 0
 
+      function updateTopScore() {
+        $('#container .other').html('<div>Рекорд: '+topScore+'</div>')
+      }
+
       // создаём игру
       var t = Tetris({
         con:'#container',
@@ -46,12 +50,13 @@
             topScore = stat.score
             console.log('new record', topScore)
             document.cookie = "score="+topScore // обновим рекорд
+            updateTopScore()
           }
           alert('Игра звершена')
         }
       });      
       t.init();
-      $('#container .other').html('<div>Рекорд: '+topScore+'</div>')
+      updateTopScore()      
     })
   </script>
 </body>
