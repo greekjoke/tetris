@@ -660,6 +660,7 @@ function Tetris(params) {
         '<div class="item"><span class="key">&rarr;</span>вправо</div>'+
         '<div class="item"><span class="key">&darr;</span>сброс</div>'+
         '<div class="item"><span class="key">space</span>пауза</div>'+
+        '<div class="item"><span class="key">esc</span>завершить</div>'+
         '<div class="item text">для начала или завершения игры <u>кликните</u></div>'+
         '</div>')
       con.append(infoPanel)
