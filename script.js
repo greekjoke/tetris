@@ -75,6 +75,7 @@ function Tetris(params) {
 
   params['onStat'] = params['onStat'] || function(stat) {}
 
+  const KEY_ESCAPE = 27
   const KEY_SPACEBAR = 32
   const KEY_ARROW_LEFT = 37
   const KEY_ARROW_UP = 38
@@ -525,15 +526,16 @@ function Tetris(params) {
         params['onStart'].call(this)
     
         clearField()
+        con.addClass('run')
         this.showPause(false)
         this.nextLoop()    
       },
 
       stop: function(byUser = false) {
         this.run = false
-        this.showPause(false)
+        this.showPause(false)        
         clearTimeout(loopTimer)
-        //drawRandom()
+        con.removeClass('run')
         params['onStop'].call(this, byUser, this.stat) 
       },
 
@@ -678,6 +680,20 @@ function Tetris(params) {
 
       var gameState = null
 
+      function requireStart() {
+        params['onPrepare'](function() {
+          gameState = newGame()    
+          gameState.start()
+        })
+      }
+
+      function requireStop() {
+        params['onStopQuestion'](function() {
+          gameState.stop(true)
+          gameState = null            
+        })  
+      }
+
       $(document).keydown(function(e) {
         if (!gameState || !gameState.run) return
 
@@ -715,6 +731,12 @@ function Tetris(params) {
             gameState.drop()
             break
 
+          case KEY_ESCAPE:
+            if (!gameState.pause) {
+              requireStop() // escape прерывает игру
+              break; 
+            }
+            // escape снимает с паузы
           case KEY_SPACEBAR:   
             gameState.togglePause()
             break
@@ -745,15 +767,9 @@ function Tetris(params) {
 
       con.click(function() {
         if (gameState && gameState.run) {
-          params['onStopQuestion'](function() {
-            gameState.stop(true)
-            gameState = null            
-          })                    
+          requireStop()
         } else {
-          params['onPrepare'](function() {
-            gameState = newGame()    
-            gameState.start()
-          })          
+          requireStart()        
         }
       })
      
